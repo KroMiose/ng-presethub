@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -8,12 +8,14 @@ from src.log import get_logging_config, logger
 from src.models import database_init
 
 # Custom routers import
+from src.routers.preset import router as preset_router
 from src.routers.user import login
 from src.routers.user import router as user_router
 
 # $import_routers$ 路由导入锚 *请不要修改此行* (Anchor of the router import line *Do not modify this line*)
 from src.schemas.message import UserToken
 from src.schemas.user import UserLogin
+from src.services.guard import check_ip_accessible
 
 database_init()
 
@@ -33,10 +35,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+""" 全局中间件配置 """
+
+
+@app.middleware("http")
+async def custom_middleware(request: Request, call_next):
+    # 在每个请求处理之前的代码
+    ip = request.client.host  # type: ignore
+    ip = (
+        request.headers.get("X-Forwarded-For", "")
+        if not ip or ip == "127.0.0.1" or ip.startswith("192.168.")
+        else ip
+    )
+    if not check_ip_accessible(ip):
+        return {"code": "429", "message": "请求过于频繁或被禁止"}
+
+    return await call_next(request)
+
 
 """ TODO 挂载路由表 """
 app.include_router(user_router, prefix="/user", tags=["User"])
-
+app.include_router(preset_router, prefix="/preset", tags=["Preset"])
 # $include_routers$ 路由导入锚 *请不要修改此行* (Anchor of the router mount line *Do not modify this line*)
 
 

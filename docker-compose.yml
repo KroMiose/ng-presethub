@@ -14,3 +14,9 @@ services:
       retries: 5
       start_period: 30s
     restart: always # 自动重启
+    environment:
+      - TZ=Asia/Shanghai
+      - MYSQL_HOST=host.docker.internal
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=123456
