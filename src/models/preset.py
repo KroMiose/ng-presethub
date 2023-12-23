@@ -10,15 +10,15 @@ from src.utils.db import Base, db
 class DBPreset(Base):
     __tablename__ = "preset"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String(64), primary_key=True, nullable=False, comment="Preset Id (由 preset_key 和 self_info 生成 用于标记唯一的人设信息)")
     # 在此添加表结构信息:
     name = Column(String(255), nullable=False, comment="Preset 名称")
-    hash_key = Column(String(64), nullable=False, comment="Preset 哈希值 (由 preset_key 和 self_info 生成 用于标记唯一的人设信息)")
     preset_key = Column(String(32), nullable=False, comment="Preset 标识符")
     description = Column(String(255), nullable=False, comment="Preset 描述")
-    self_info = Column(String(8192), nullable=False, comment="Preset 预设信息")
+    self_intro = Column(String(8192), nullable=False, comment="Preset 预设信息")
     uploader = Column(String(255), nullable=False, comment="上传者")
-    from_ip = Column(String(32), nullable=False, comment="上传者 IP")
+    used_count = Column(Integer, default=0, comment="使用次数")
+    from_ip = Column(String(32), nullable=False, comment="来自客户端 IP")
 
     last_update_time = Column(DateTime, default=datetime.now)
     created_time = Column(DateTime, default=datetime.now)

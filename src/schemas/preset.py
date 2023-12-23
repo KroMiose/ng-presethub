@@ -26,6 +26,10 @@ class QueryCondition(BaseModel):
 
 class PresetCreate(BaseModel):
     name: str
+    preset_key: str
+    self_intro: str
+    uploader: str
+    description: str
 
 class PresetUpdate(BaseModel):
     id: int

@@ -62,14 +62,15 @@ class DevConfig(Config):
     LOG_LEVEL = "DEBUG"
     UVICORN_LOG_LEVEL = "DEBUG"
     DATABASE_URL = gen_mysql_db_url(
-        host="localhost",
-        port=3306,
-        user="root",
-        password=os.getenv("MYSQL_PASSWORD", ""),
+        host=os.getenv("MYSQL_HOST", "localhost"),
+        port=int(os.getenv("MYSQL_PORT", 3306)),
+        user=os.getenv("MYSQL_USER", "root"),
+        password=os.getenv("MYSQL_PASSWORD", "123456"),
         database="ng_presethub",
     )
     RELOAD = True
     DEBUG = True
+    SUPER_ACCESS_KEY = "presethub-super-access-key"
 
 
 class ProdConfig(Config):
@@ -80,8 +81,9 @@ class ProdConfig(Config):
     DATABASE_URL = gen_mysql_db_url(
         host=os.getenv("MYSQL_HOST", "localhost"),
         port=int(os.getenv("MYSQL_PORT", 3306)),
-        user=os.getenv("MYSQL_USER", ""),
-        password=os.getenv("MYSQL_PASSWORD", ""),
+        user=os.getenv("MYSQL_USER", "root"),
+        password=os.getenv("MYSQL_PASSWORD", "123456"),
         database="ng_presethub",
     )
+    SUPER_ACCESS_KEY = os.getenv("SUPER_ACCESS_KEY")
     DEBUG = False
