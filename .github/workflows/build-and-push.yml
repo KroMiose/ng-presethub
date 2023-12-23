@@ -32,8 +32,12 @@ jobs:
     needs: build-and-push
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2 # 检出代码
+      - name: Connect Check
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: ssh -o StrictHostKeyChecking=no ${{ secrets.YOUR_SERVER_HOST }} "echo'success'"
 
       - name: Configure SSH Key
         env:
