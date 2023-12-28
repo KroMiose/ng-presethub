@@ -10,7 +10,12 @@ from src.utils.db import Base, db
 class DBPreset(Base):
     __tablename__ = "preset"
 
-    id = Column(String(64), primary_key=True, nullable=False, comment="Preset Id (由 preset_key 和 self_info 生成 用于标记唯一的人设信息)")
+    id = Column(
+        String(64),
+        primary_key=True,
+        nullable=False,
+        comment="Preset Id (由 preset_key 和 self_info 生成 用于标记唯一的人设信息)",
+    )
     # 在此添加表结构信息:
     name = Column(String(255), nullable=False, comment="Preset 名称")
     preset_key = Column(String(32), nullable=False, comment="Preset 标识符")
@@ -27,10 +32,16 @@ class DBPreset(Base):
     def add(cls, data: "DBPreset"):
         """新增 Preset 资源"""
 
-        data.last_update_time = datetime.now()
-        data.created_time = datetime.now()
-        db.add(data)
-        db.commit()
+        try:
+            data.last_update_time = datetime.now()
+            data.created_time = datetime.now()
+            db.add(data)
+            db.commit()
+        except:
+            db.rollback()
+            return False
+        else:
+            return True
 
     @classmethod
     def get_by_id(cls, _id: int):
@@ -78,19 +89,31 @@ class DBPreset(Base):
     def update(cls, data: "DBPreset", **kwargs):
         """更新 Preset 资源"""
 
-        if "id" in kwargs:
-            del kwargs["id"]
-        if "created_time" in kwargs:
-            del kwargs["created_time"]
-        if "last_update_time" in kwargs:
-            del kwargs["last_update_time"]
-        data.last_update_time = datetime.now()
-        db.query(cls).filter(cls.id == data.id).update(dict(**kwargs))
-        db.commit()
+        try:
+            if "id" in kwargs:
+                del kwargs["id"]
+            if "created_time" in kwargs:
+                del kwargs["created_time"]
+            if "last_update_time" in kwargs:
+                del kwargs["last_update_time"]
+            data.last_update_time = datetime.now()
+            db.query(cls).filter(cls.id == data.id).update(dict(**kwargs))
+            db.commit()
+        except:
+            db.rollback()
+            return False
+        else:
+            return True
 
     @classmethod
     def delete(cls, data: "DBPreset"):
         """删除 Preset 资源"""
 
-        db.query(cls).filter(cls.id == data.id).delete()
-        db.commit()
+        try:
+            db.query(cls).filter(cls.id == data.id).delete()
+            db.commit()
+        except:
+            db.rollback()
+            return False
+        else:
+            return True
