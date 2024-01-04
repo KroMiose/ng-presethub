@@ -9,7 +9,7 @@ from src.log import logger
 Base = declarative_base()
 
 # Init Database engine:
-engine = create_engine(config.DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(config.DATABASE_URL, pool_recycle=3600)
 Base.metadata.create_all(engine)
 
 connection = engine.connect()
