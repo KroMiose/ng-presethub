@@ -33,6 +33,7 @@ class DBPreset(Base):
         """新增 Preset 资源"""
 
         try:
+            db.begin()
             data.last_update_time = datetime.now()
             data.created_time = datetime.now()
             db.add(data)
@@ -90,6 +91,7 @@ class DBPreset(Base):
         """更新 Preset 资源"""
 
         try:
+            db.begin()
             if "id" in kwargs:
                 del kwargs["id"]
             if "created_time" in kwargs:
@@ -110,6 +112,7 @@ class DBPreset(Base):
         """删除 Preset 资源"""
 
         try:
+            db.begin()
             db.query(cls).filter(cls.id == data.id).delete()
             db.commit()
         except:
