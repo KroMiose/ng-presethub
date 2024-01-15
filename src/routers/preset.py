@@ -61,14 +61,16 @@ async def create(data: PresetCreate, request: Request):
             from_ip=get_ip(request),
         )
 
-        DBPreset.add(item)
-        logger.info(f"预设 {item.name}[{item.id}] 上传成功 ({item.from_ip})")
-        return Ret.success(
-            "Create success",
-            data={
-                "id": item.id,
-            },
-        )
+        if DBPreset.add(item):
+            logger.info(f"预设 {item.name}[{item.id}] 上传成功 ({item.from_ip})")
+            return Ret.success(
+                "Create success",
+                data={
+                    "id": item.id,
+                },
+            )
+        logger.error(f"Create {data} resource failed")
+        return Ret.fail("上传预设失败")
     except:
         logger.error(f"Create {data} resource failed")
         return Ret.fail("Create failed")

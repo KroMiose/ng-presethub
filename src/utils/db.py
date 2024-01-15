@@ -13,6 +13,19 @@ engine = create_engine(config.DATABASE_URL, pool_recycle=3600)
 Base.metadata.create_all(engine)
 
 connection = engine.connect()
+
+def ensure_connection():
+    global connection
+
+    try:
+        if connection.invalidated:
+            connection.rollback()
+            connection = engine.connect()
+    except Exception as e:
+        logger.error(f"Can not connect to database | Error: {e}")
+        raise
+
+
 logger.info(f"Connected to database {config.DATABASE_URL}")
 
 # Create Database Session:

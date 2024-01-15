@@ -4,7 +4,7 @@ from sqlalchemy import Column, DateTime, Integer, String
 
 from src.log import logger
 from src.schemas.preset import QueryCondition
-from src.utils.db import Base, db
+from src.utils.db import Base, db, ensure_connection
 
 
 # 定义 Preset 模型
@@ -34,7 +34,7 @@ class DBPreset(Base):
         """新增 Preset 资源"""
 
         try:
-            db.begin()
+            ensure_connection()
             data.last_update_time = datetime.now()
             data.created_time = datetime.now()
             db.add(data)
@@ -50,12 +50,14 @@ class DBPreset(Base):
     def get_by_id(cls, _id: int):
         """根据 id 查询 Preset 资源"""
 
+        ensure_connection()
         return db.query(cls).filter(cls.id == _id).first()
 
     @classmethod
     def query(cls, condition: QueryCondition):
         """根据条件查询 Preset 资源"""
 
+        ensure_connection()
         page = condition.page if condition.page else 1
         page_size = condition.page_size if condition.page_size else 10
         order_field_name = condition.order_by.field_name
@@ -92,8 +94,8 @@ class DBPreset(Base):
     def update(cls, data: "DBPreset", **kwargs):
         """更新 Preset 资源"""
 
+        ensure_connection()
         try:
-            db.begin()
             if "id" in kwargs:
                 del kwargs["id"]
             if "created_time" in kwargs:
@@ -113,8 +115,8 @@ class DBPreset(Base):
     def delete(cls, data: "DBPreset"):
         """删除 Preset 资源"""
 
+        ensure_connection()
         try:
-            db.begin()
             db.query(cls).filter(cls.id == data.id).delete()
             db.commit()
         except:
