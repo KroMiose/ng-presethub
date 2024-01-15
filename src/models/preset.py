@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Integer, String
 
+from src.log import logger
 from src.schemas.preset import QueryCondition
 from src.utils.db import Base, db
 
@@ -14,7 +15,7 @@ class DBPreset(Base):
         String(64),
         primary_key=True,
         nullable=False,
-        comment="Preset Id (由 preset_key 和 self_info 生成 用于标记唯一的人设信息)",
+        comment="Preset Id (由 preset_key 和 self_info 生成 用于标记唯一的预设信息)",
     )
     # 在此添加表结构信息:
     name = Column(String(255), nullable=False, comment="Preset 名称")
@@ -38,8 +39,9 @@ class DBPreset(Base):
             data.created_time = datetime.now()
             db.add(data)
             db.commit()
-        except:
+        except Exception as e:
             db.rollback()
+            logger.exception(f"添加预设时出现错误: {e}")
             return False
         else:
             return True
@@ -101,9 +103,9 @@ class DBPreset(Base):
             data.last_update_time = datetime.now()
             db.query(cls).filter(cls.id == data.id).update(dict(**kwargs))
             db.commit()
-        except:
+        except Exception as e:
             db.rollback()
-            return False
+            logger.exception(f"编辑预设时出现错误: {e}")
         else:
             return True
 
