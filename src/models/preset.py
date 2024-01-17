@@ -4,7 +4,7 @@ from sqlalchemy import Column, DateTime, Integer, String
 
 from src.log import logger
 from src.schemas.preset import QueryCondition
-from src.utils.db import Base, db, ensure_connection
+from src.utils.db import Base, connect_db
 
 
 # 定义 Preset 模型
@@ -33,94 +33,94 @@ class DBPreset(Base):
     def add(cls, data: "DBPreset"):
         """新增 Preset 资源"""
 
-        try:
-            ensure_connection()
-            data.last_update_time = datetime.now()
-            data.created_time = datetime.now()
-            db.add(data)
-            db.commit()
-        except Exception as e:
-            db.rollback()
-            logger.exception(f"添加预设时出现错误: {e}")
-            return False
-        else:
-            return True
+        with connect_db() as db:
+            try:
+                data.last_update_time = datetime.now()
+                data.created_time = datetime.now()
+                db.add(data)
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                logger.exception(f"添加预设时出现错误: {e}")
+                return False
+            else:
+                return True
 
     @classmethod
     def get_by_id(cls, _id: int):
         """根据 id 查询 Preset 资源"""
 
-        ensure_connection()
-        return db.query(cls).filter(cls.id == _id).first()
+        with connect_db() as db:
+            return db.query(cls).filter(cls.id == _id).first()
 
     @classmethod
     def query(cls, condition: QueryCondition):
         """根据条件查询 Preset 资源"""
 
-        ensure_connection()
-        page = condition.page if condition.page else 1
-        page_size = condition.page_size if condition.page_size else 10
-        order_field_name = condition.order_by.field_name
-        order_desc = condition.order_by.desc
-        keyword = condition.keyword
+        with connect_db() as db:
+            page = condition.page if condition.page else 1
+            page_size = condition.page_size if condition.page_size else 10
+            order_field_name = condition.order_by.field_name
+            order_desc = condition.order_by.desc
+            keyword = condition.keyword
 
-        query = db.query(cls)
+            query = db.query(cls)
 
-        # for _filter in condition.filters:
-        #     field_name = _filter.field_name
-        #     value = _filter.value
+            # for _filter in condition.filters:
+            #     field_name = _filter.field_name
+            #     value = _filter.value
 
-        #     # TODO 待实现: 检查参数类型，根据不同类型添加不同筛选条件
+            #     # TODO 待实现: 检查参数类型，根据不同类型添加不同筛选条件
 
-        if keyword:
-            query = db.query(cls).filter(cls.name.like(f"%{keyword}%"))
+            if keyword:
+                query = db.query(cls).filter(cls.name.like(f"%{keyword}%"))
 
-        if order_field_name:
-            query = query.order_by(
-                getattr(cls, order_field_name).asc()
-                if not order_desc
-                else getattr(cls, order_field_name).desc(),
-            )
+            if order_field_name:
+                query = query.order_by(
+                    getattr(cls, order_field_name).asc()
+                    if not order_desc
+                    else getattr(cls, order_field_name).desc(),
+                )
 
-        total = query.count()
+            total = query.count()
 
-        if page and page_size:
-            query = query.offset((page - 1) * page_size)
-        query = query.limit(page_size)
+            if page and page_size:
+                query = query.offset((page - 1) * page_size)
+            query = query.limit(page_size)
 
-        return query, total
+            return query, total
 
     @classmethod
     def update(cls, data: "DBPreset", **kwargs):
         """更新 Preset 资源"""
 
-        ensure_connection()
-        try:
-            if "id" in kwargs:
-                del kwargs["id"]
-            if "created_time" in kwargs:
-                del kwargs["created_time"]
-            if "last_update_time" in kwargs:
-                del kwargs["last_update_time"]
-            data.last_update_time = datetime.now()
-            db.query(cls).filter(cls.id == data.id).update(dict(**kwargs))
-            db.commit()
-        except Exception as e:
-            db.rollback()
-            logger.exception(f"编辑预设时出现错误: {e}")
-        else:
-            return True
+        with connect_db() as db:
+            try:
+                if "id" in kwargs:
+                    del kwargs["id"]
+                if "created_time" in kwargs:
+                    del kwargs["created_time"]
+                if "last_update_time" in kwargs:
+                    del kwargs["last_update_time"]
+                data.last_update_time = datetime.now()
+                db.query(cls).filter(cls.id == data.id).update(dict(**kwargs))
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                logger.exception(f"编辑预设时出现错误: {e}")
+            else:
+                return True
 
     @classmethod
     def delete(cls, data: "DBPreset"):
         """删除 Preset 资源"""
 
-        ensure_connection()
-        try:
-            db.query(cls).filter(cls.id == data.id).delete()
-            db.commit()
-        except:
-            db.rollback()
-            return False
-        else:
-            return True
+        with connect_db() as db:
+            try:
+                db.query(cls).filter(cls.id == data.id).delete()
+                db.commit()
+            except:
+                db.rollback()
+                return False
+            else:
+                return True

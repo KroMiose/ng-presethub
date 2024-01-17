@@ -9,28 +9,33 @@ from src.log import logger
 Base = declarative_base()
 
 # Init Database engine:
-engine = create_engine(config.DATABASE_URL, pool_recycle=3600)
+engine = create_engine(config.DATABASE_URL, pool_pre_ping=True)
 Base.metadata.create_all(engine)
 
-connection = engine.connect()
 
-def ensure_connection():
-    global connection
+class connect_db:
+    def __enter__(self):
+        self.engine = create_engine(config.DATABASE_URL, pool_pre_ping=True)
+        self.connection = self.engine.connect()
+        if self.connection.invalidated:
+            self.connection.rollback()
+            self.connection = self.engine.connect()
+        self.db: Session = sessionmaker(bind=self.engine)()
+        return self.db
 
-    try:
-        if connection.invalidated:
-            connection.rollback()
-            connection = engine.connect()
-    except Exception as e:
-        logger.error(f"Can not connect to database | Error: {e}")
-        raise
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            logger.error(f"Error: {exc_type} | {exc_val} | {exc_tb}")
+        else:
+            self.db.close()
 
 
 logger.info(f"Connected to database {config.DATABASE_URL}")
 
 # Create Database Session:
 try:
-    db: Session = sessionmaker(bind=engine)()
+    with connect_db() as db:
+        pass
 except:
     logger.exception("Failed to create DBSession")
     raise
